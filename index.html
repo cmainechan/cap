@@ -398,6 +398,8 @@ const DAYS=[
   const [, mo, d]=date.split('-').map(Number);
   return {n,date,note:m[1],leaves:m[2],label:d+' '+MONTHS[mo-1],wk:new Date(date+'T00:00:00').toLocaleDateString('en-GB',{weekday:'short'}),short:String(d)};
 });
+/* Carousels run A to Z by name, so new items slot in alphabetically. */
+Object.keys(ITEMS).forEach(k=>ITEMS[k].sort((a,b)=>a.name.localeCompare(b.name,undefined,{sensitivity:'base'})));
 const LABEL={top:'top',bottom:'bottom'};
 
 const $=s=>document.querySelector(s);
