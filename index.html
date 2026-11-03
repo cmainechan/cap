@@ -64,12 +64,8 @@ h1,h2,h3,p{margin:0}
 h1{font:600 clamp(1.6rem,4.5vw,2.1rem)/1.1 var(--font-display);letter-spacing:-0.02em;text-wrap:balance}
 .meta{margin-top:6px;font:500 .72rem/1.4 var(--font-mono);letter-spacing:.06em;text-transform:uppercase;color:var(--ink-2)}
 
-.layout{display:grid;gap:40px}
-@media (min-width:1040px){
-  .layout{grid-template-columns:400px minmax(0,1fr);gap:56px;align-items:start}
-  :root{--slim:172px;--w:150px}
-}
-@media (min-width:1040px) and (min-height:1000px){ .builder{position:sticky;top:16px} }
+.builder{max-width:460px;margin:0 auto}
+@media (min-width:1040px){ :root{--slim:172px;--w:150px} }
 
 h2{font:600 1.35rem/1.2 var(--font-display);letter-spacing:-0.01em;text-align:center}
 .lede{margin-top:4px;text-align:center;font-size:.8125rem;color:var(--ink-2)}
@@ -130,9 +126,14 @@ h2{font:600 1.35rem/1.2 var(--font-display);letter-spacing:-0.01em;text-align:ce
 
 /* ---------- Tabs ---------- */
 .tabs{display:flex;gap:4px;margin-bottom:26px;border-bottom:1px solid var(--line)}
+.tcount{display:inline-block;min-width:1.5em;margin-left:6px;padding:1px 6px;border-radius:99px;background:var(--surface-2);border:1px solid var(--line);color:var(--ink-2);font:500 .72rem/1.4 var(--font-mono);text-align:center}
+.tabs button[aria-selected="true"] .tcount{background:var(--accent-soft);border-color:transparent;color:var(--accent)}
+.tabs{overflow-x:auto}
+.tabs button{white-space:nowrap}
 .tabs button{padding:12px 18px;border:0;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;color:var(--ink-2);font:600 .9375rem/1.2 var(--font-body);cursor:pointer}
 .tabs button:hover{color:var(--ink)}
 .tabs button[aria-selected="true"]{color:var(--ink);border-bottom-color:var(--accent)}
+@media (max-width:480px){.xs-hide{display:none}.tabs button{padding:12px 10px;font-size:.875rem}.tcount{margin-left:4px;padding:1px 5px}}
 
 /* ---------- Calendar ---------- */
 .cal{--slim:clamp(84px,25vw,150px);max-width:760px;margin:0 auto}
@@ -279,12 +280,12 @@ footer{margin-top:40px;font-size:.8125rem;color:var(--ink-2);text-align:center}
   </div>
 
   <nav class="tabs" role="tablist" aria-label="Pages">
-    <button type="button" role="tab" id="tab-builder" data-tab="builder" aria-controls="page-builder" aria-selected="true">Capsule Builder</button>
+    <button type="button" role="tab" id="tab-builder" data-tab="builder" aria-controls="page-builder" aria-selected="true"><span class="xs-hide">Capsule </span>Builder</button>
+    <button type="button" role="tab" id="tab-bank" data-tab="bank" aria-controls="page-bank" aria-selected="false">Outfit Bank<span class="tcount" id="tcount">0</span></button>
     <button type="button" role="tab" id="tab-calendar" data-tab="calendar" aria-controls="page-cal" aria-selected="false">Calendar</button>
   </nav>
 
   <div id="page-builder" role="tabpanel" aria-labelledby="tab-builder">
-  <div class="layout">
     <section class="builder" aria-labelledby="h-builder">
       <h2 id="h-builder">Capsule Builder</h2>
       <div id="builder"></div>
@@ -293,7 +294,9 @@ footer{margin-top:40px;font-size:.8125rem;color:var(--ink-2);text-align:center}
         <p class="exists" id="exists" role="status" aria-live="polite"></p>
       </div>
     </section>
+  </div>
 
+  <div id="page-bank" role="tabpanel" aria-labelledby="tab-bank" hidden>
     <section class="bankwrap" aria-labelledby="h-bank">
       <div class="bankhead">
         <h2 id="h-bank" class="bt">Outfit Bank</h2>
@@ -314,7 +317,6 @@ footer{margin-top:40px;font-size:.8125rem;color:var(--ink-2);text-align:center}
       </div>
       <div class="empty" id="empty" hidden></div>
     </section>
-  </div>
   </div>
 
   <section id="page-cal" role="tabpanel" aria-labelledby="tab-calendar" hidden>
@@ -561,6 +563,7 @@ function createOutfit(){
 }
 
 function reveal(id){
+  if($('#page-bank').hidden)showTab('bank');
   let card=$('.ocard[data-id="'+id+'"]');
   if(!card&&favOnly){favOnly=false;persist();renderBank();card=$('.ocard[data-id="'+id+'"]');}
   if(!card)return;
@@ -619,6 +622,7 @@ function renderBank(){
         +'<ol class="bank">'+g.list.map(o=>cardHTML(o,0,n,true)).join('')+'</ol></section>';
     }).join('');
   }
+  $('#tcount').textContent=total;
   $('#count').textContent=favOnly?n+' of '+total+' outfits · favourites':total+(total===1?' outfit':' outfits');
   $('#empty').hidden=n>0;
   $('#empty').textContent=total===0?'No outfits yet. Choose a top and a bottom, then press Create outfit.':'No favourites yet. Tap the star on an outfit to add it here.';
@@ -867,12 +871,15 @@ function calGo(i,animate){
 }
 
 /* ---------- tabs ---------- */
+const PAGES={builder:'#page-builder',bank:'#page-bank',calendar:'#page-cal'};
+const tabFromHash=()=>({'#calendar':'calendar','#bank':'bank'}[location.hash]||'builder');
 function showTab(name){
-  const cal=name==='calendar';
-  $('#page-builder').hidden=cal;$('#page-cal').hidden=!cal;
+  if(!PAGES[name])name='builder';
+  Object.keys(PAGES).forEach(k=>{$(PAGES[k]).hidden=k!==name;});
   $$('.tabs [data-tab]').forEach(b=>b.setAttribute('aria-selected',b.dataset.tab===name?'true':'false'));
-  try{const h=cal?'calendar':'builder';if(location.hash!=='#'+h)location.hash=h;}catch(e){}
-  if(cal){if(!calBuilt)buildCal();else paintCal();}
+  try{if(location.hash!=='#'+name)location.hash=name;}catch(e){}
+  if(name==='calendar'){if(!calBuilt)buildCal();else paintCal();}
+  window.scrollTo(0,0);
 }
 $('.tabs').addEventListener('click',e=>{const b=e.target.closest('[data-tab]');if(b)showTab(b.dataset.tab);});
 
@@ -927,7 +934,7 @@ function toast(msg,action){
 
 /* ---------- start ---------- */
 buildBuilder();wireBuilder();renderBank();updateCreate();
-if(location.hash==='#calendar')showTab('calendar');
+if(location.hash==='#calendar'||location.hash==='#bank')showTab(tabFromHash());
 /* Offline support: only where the page is served over http(s), e.g. GitHub Pages. */
 try{
   if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
@@ -937,7 +944,7 @@ try{
     }).catch(()=>{});
   }
 }catch(e){}
-window.addEventListener('hashchange',()=>{showTab(location.hash==='#calendar'?'calendar':'builder');});
+window.addEventListener('hashchange',()=>{showTab(tabFromHash());});
 })();
 </script>
 </body>
