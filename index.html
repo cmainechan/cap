@@ -4,6 +4,12 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Capsule Builder</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<meta name="theme-color" content="#0B7A6A">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="Capsule">
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500..700&family=DM+Mono:wght@400;500&family=Instrument+Sans:wght@400;500;600&display=swap">
 <style>
 /* Layout: one column on phones; builder left + outfit bank right on wide screens. Same tokens as the Trip Outfit Planner. */
@@ -921,6 +927,15 @@ function toast(msg,action){
 /* ---------- start ---------- */
 buildBuilder();wireBuilder();renderBank();updateCreate();
 if(location.hash==='#calendar')showTab('calendar');
+/* Offline support: only where the page is served over http(s), e.g. GitHub Pages. */
+try{
+  if('serviceWorker' in navigator&&/^https?:$/.test(location.protocol)){
+    navigator.serviceWorker.register('sw.js').then(()=>navigator.serviceWorker.ready).then(()=>{
+      let seen=false;try{seen=localStorage.getItem('capsule-offline-ready')==='1';}catch(e){}
+      if(!seen){try{localStorage.setItem('capsule-offline-ready','1');}catch(e){}toast('Saved for offline use. You can add it to your home screen.');}
+    }).catch(()=>{});
+  }
+}catch(e){}
 window.addEventListener('hashchange',()=>{showTab(location.hash==='#calendar'?'calendar':'builder');});
 })();
 </script>
