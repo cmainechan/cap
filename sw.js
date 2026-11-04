@@ -1,6 +1,6 @@
 /* Offline cache for the capsule wardrobe page.
    Bump VERSION when you publish a new index.html so phones pick it up. */
-const VERSION='capsule-v2';
+const VERSION='capsule-v3';
 const ASSETS=['./','index.html','manifest.webmanifest','icon-192.png','icon-512.png','apple-touch-icon.png'];
 const FONT_HOSTS=['fonts.googleapis.com','fonts.gstatic.com'];
 
