@@ -209,6 +209,11 @@ h2{font:600 1.35rem/1.2 var(--font-display);letter-spacing:-0.01em;text-align:ce
   grid-template-rows:minmax(0,38fr) minmax(0,62fr);grid-template-columns:minmax(0,1fr)}
 .ocard.wide .art{grid-template-columns:minmax(0,1.1fr) minmax(0,1fr)}
 .art img{width:100%;height:100%;min-width:0;min-height:0;object-fit:contain;pointer-events:none;user-select:none;-webkit-user-drag:none}
+.art .stk{grid-row:1 / 3;grid-column:1;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:8px;min-width:0;min-height:0}
+.ocard.wide .art .stk{grid-column:2}
+.art .stk img{height:auto;width:100%;transform:none}
+.art .stk img.i-top{max-height:calc((var(--slim)*2.05 - 32px)*.38)}
+.art .stk img.sk{width:64%}
 .art .i-outer{grid-row:1 / 3;grid-column:1}
 .ocard.wide .art .i-top{grid-column:2;grid-row:1} .ocard.wide .art .i-bottom{grid-column:2;grid-row:2}
 .num{position:absolute;top:11px;left:16px;font:500 .7rem/1 var(--font-mono);color:var(--photo-ink)}
@@ -437,7 +442,8 @@ const existing=()=>S.outfits.find(o=>sig(o)===sig(current()));
 const CHEV={l:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 5l-7 7 7 7"/></svg>',
             r:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l7 7-7 7"/></svg>'};
 const CHECK='<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 12.5l5 5L20 6.5"/></svg>';
-const imgTag=(it,cls)=>'<img'+(cls?' class="'+cls+'"':'')+' src="'+IMG[it.img]+'" alt="'+esc(it.name)+'" draggable="false">';
+const imgTag=(it,cls)=>{const c=[cls,it.id==='bot-skort'?'sk':''].filter(Boolean).join(' ');return '<img'+(c?' class="'+c+'"':'')+' src="'+IMG[it.img]+'" alt="'+esc(it.name)+'" draggable="false">';};
+const artInner=(out,top,bot)=>(out?imgTag(out,'i-outer'):'')+(bot.id==='bot-skort'?'<div class="stk">'+imgTag(top,'i-top')+imgTag(bot,'i-bottom')+'</div>':imgTag(top,'i-top')+imgTag(bot,'i-bottom'));
 
 function buildBuilder(){
   let h='<section class="cat" data-cat="outer" aria-labelledby="h-outer"><h3 id="h-outer"><span class="dot"></span>Outerwear <span class="opt">optional</span></h3>'
@@ -566,7 +572,7 @@ function cardHTML(o,i,n,grouped){
   const top=find('top',o.top),bot=find('bottom',o.bottom),out=outerOf(o);
   const desc=(out?out.name+', ':'')+top.name+', '+bot.name;
   return '<li class="ocard '+(out?'wide':'slim')+'" data-id="'+o.id+'">'
-    +'<div class="art photo">'+(out?imgTag(out,'i-outer'):'')+imgTag(top,'i-top')+imgTag(bot,'i-bottom')+'</div>'
+    +'<div class="art photo">'+artInner(out,top,bot)+'</div>'
     +(grouped?'':'<span class="num" aria-hidden="true">'+(i+1)+'</span>')
     +'<button type="button" class="rm" data-act="rm" aria-label="Remove outfit: '+esc(desc)+'">'+XICON+'</button>'
     +(grouped?'</li>':'<div class="bar" role="group" aria-label="Outfit '+(i+1)+': '+esc(desc)+'">'
@@ -742,7 +748,7 @@ const outfitFor=i=>{const id=P[DAYS[i].date];return S.outfits.find(o=>o.id===id)
 const usedDays=id=>DAYS.map((d,i)=>P[d.date]===id?d.n:0).filter(Boolean);
 function miniArt(o){
   const top=find('top',o.top),bot=find('bottom',o.bottom),out=outerOf(o);
-  return '<div class="ocard '+(out?'wide':'slim')+'"><div class="art photo">'+(out?imgTag(out,'i-outer'):'')+imgTag(top,'i-top')+imgTag(bot,'i-bottom')+'</div></div>';
+  return '<div class="ocard '+(out?'wide':'slim')+'"><div class="art photo">'+artInner(out,top,bot)+'</div></div>';
 }
 function slotHTML(i){
   const o=outfitFor(i);
